@@ -1,6 +1,9 @@
 package habitrpg
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
 type TaskChallenge struct {
 	ID     string `json:"id,omitempty"`
@@ -8,9 +11,29 @@ type TaskChallenge struct {
 	Winner string `json:"winner,omitempty"`
 }
 
+type TaskHistoryDate time.Time
+
+func (t TaskHistoryDate) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.FormatInt(time.Time(t).Unix()*1000, 10)), nil
+}
+
+func (t *TaskHistoryDate) UnmarshalJSON(in []byte) error {
+	i, err := strconv.ParseInt(string(in), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	*t = TaskHistoryDate(time.Unix(i/1000, 0))
+	return nil
+}
+
+func (t TaskHistoryDate) String() string {
+	return time.Time(t).String()
+}
+
 type TaskHistory struct {
-	Date  int     `json:"date,omitempty"` // WTF: Though docs says this is a Date, there is an timestamp in it
-	Value float64 `json:"value,omitempty"`
+	Date  TaskHistoryDate `json:"date,omitempty"` // WTF: Though docs says this is a Date, there is an timestamp in it
+	Value float64         `json:"value,omitempty"`
 }
 
 type TaskRepeat struct {
