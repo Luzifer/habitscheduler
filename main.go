@@ -60,7 +60,7 @@ func main() {
 	v1.HandleFunc("/tasks", handleGetTasks).Methods("GET")
 	v1.HandleFunc("/tasks/{taskid}", handleDeleteTask).Methods("DELETE")
 
-	http.Handle("/", r)
+	http.Handle("/", &MyServer{r})
 	http.ListenAndServe(config.ListenAddress, nil)
 }
 
@@ -83,6 +83,7 @@ func handleCreateTask(res http.ResponseWriter, r *http.Request) {
 		task = NewHourRepeatTask(r.FormValue("title"), rep)
 	default:
 		http.Error(res, "Please specify task data.", http.StatusInternalServerError)
+		return
 	}
 
 	habitRPG.Tasks = append(habitRPG.Tasks, *task)
@@ -113,4 +114,23 @@ func handleDeleteTask(res http.ResponseWriter, r *http.Request) {
 
 	res.Header().Add("Content-Type", "text/plain")
 	res.Write([]byte("OK"))
+}
+
+type MyServer struct {
+	r *mux.Router
+}
+
+func (s *MyServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if origin := req.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers",
+			"Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if req.Method == "OPTIONS" {
+		return
+	}
+	// Lets Gorilla work
+	s.r.ServeHTTP(rw, req)
 }
