@@ -45,6 +45,7 @@ func main() {
 			log.Println("Save to Redis: Success")
 		} else {
 			log.Printf("Save to Redis: %s\n", err)
+			os.Exit(1)
 		}
 	})
 	c.AddFunc(config.CronCreateTask, habitRPG.CreateDueTasks)
