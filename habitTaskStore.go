@@ -107,7 +107,7 @@ func (h *HabitTaskStore) UpdateStates() {
 		for _, htask := range res {
 			if htask.ID == task.LastTaskID {
 				task.IsCompleted = htask.Completed
-				task.updateNextEntryTime(htask.DateCompleted)
+				task.updateNextEntryTime(htask.DateCompleted, false)
 				if task.IsCompleted {
 					task.LastTaskID = ""
 				}
@@ -116,7 +116,7 @@ func (h *HabitTaskStore) UpdateStates() {
 		}
 		if !taskFound {
 			task.IsCompleted = true
-			task.updateNextEntryTime(time.Now())
+			task.updateNextEntryTime(time.Now(), false)
 			task.LastTaskID = ""
 		}
 	}
@@ -164,38 +164,49 @@ type HabitTask struct {
 	RepeatCronEntry string
 }
 
-func NewCronTask(title, cronSpec string) (*HabitTask, error) {
-	scheduler, err := cron.Parse(cronSpec)
+func NewTaskWithChecks(input []byte) (*HabitTask, error) {
+	tmp := HabitTask{}
+	err := json.Unmarshal(input, &tmp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not deserialize JSON: %s", err)
 	}
 
-	return &HabitTask{
-		ID:              uuid.NewV4().String(),
-		Title:           title,
-		RepeatCron:      true,
-		RepeatCronEntry: cronSpec,
-		NextEntryDate:   scheduler.Next(time.Now()),
-		IsCompleted:     true,
-	}, nil
-}
-
-func NewHourRepeatTask(title string, repeatAfter int) *HabitTask {
-	return &HabitTask{
-		ID:            uuid.NewV4().String(),
-		Title:         title,
-		RepeatHours:   repeatAfter,
-		RepeatCron:    false,
-		NextEntryDate: time.Now(),
-		IsCompleted:   true,
+	out := &HabitTask{
+		ID:          uuid.NewV4().String(),
+		Title:       tmp.Title,
+		IsCompleted: true,
+		RepeatHours: tmp.RepeatHours,
+		RepeatCron:  false,
 	}
+
+	if tmp.RepeatCron && len(tmp.RepeatCronEntry) > 0 {
+		_, err := cron.Parse(tmp.RepeatCronEntry)
+		if err != nil {
+			return nil, fmt.Errorf("Could not parse cron format: %s", err)
+		}
+
+		out.RepeatCron = true
+		out.RepeatCronEntry = tmp.RepeatCronEntry
+	}
+
+	if out.RepeatHours == 0 && out.RepeatCron == false {
+		return nil, fmt.Errorf("You must specify at least one of RepeatHours or RepeatCronEntry")
+	}
+
+	out.updateNextEntryTime(time.Now(), true)
+
+	return out, nil
 }
 
-func (t *HabitTask) updateNextEntryTime(dateCompleted time.Time) {
-	if t.RepeatCron {
-		scheduler, _ := cron.Parse(t.RepeatCronEntry)
-		t.NextEntryDate = scheduler.Next(dateCompleted)
+func (t *HabitTask) updateNextEntryTime(dateCompleted time.Time, initial bool) {
+	if initial {
+		t.NextEntryDate = time.Now()
 	} else {
 		t.NextEntryDate = dateCompleted.Add(time.Duration(t.RepeatHours) * time.Hour)
+	}
+
+	if t.RepeatCron {
+		scheduler, _ := cron.Parse(t.RepeatCronEntry)
+		t.NextEntryDate = scheduler.Next(t.NextEntryDate)
 	}
 }

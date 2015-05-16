@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
@@ -65,24 +64,14 @@ func main() {
 }
 
 func handleCreateTask(res http.ResponseWriter, r *http.Request) {
-	var task *HabitTask
-	var err error
-	switch r.FormValue("taskType") {
-	case "cron":
-		task, err = NewCronTask(r.FormValue("title"), r.FormValue("cron"))
-		if err != nil {
-			http.Error(res, fmt.Sprintf("Unable to create task: %s", err), http.StatusInternalServerError)
-			return
-		}
-	case "repeat":
-		rep, err := strconv.Atoi(r.FormValue("repeat"))
-		if err != nil {
-			http.Error(res, "Parameter 'repeat' has to be int.", http.StatusInternalServerError)
-			return
-		}
-		task = NewHourRepeatTask(r.FormValue("title"), rep)
-	default:
-		http.Error(res, "Please specify task data.", http.StatusInternalServerError)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(res, "Unable to read task data", http.StatusInternalServerError)
+		return
+	}
+	task, err := NewTaskWithChecks(body)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
