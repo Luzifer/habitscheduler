@@ -10,6 +10,10 @@ type Config struct {
 
 	HabitRPGUserID   string
 	HabitRPGAPIToken string
+
+	CronCreateTask  string
+	CronSaveToRedis string
+	CronUpdateTasks string
 }
 
 func LoadConfig() *Config {
@@ -21,6 +25,10 @@ func LoadConfig() *Config {
 
 		habitRPGUserID   = flag.String("habit-user", "", "User-ID from API page in HabitRPG")
 		habitRPGAPIToken = flag.String("habit-token", "", "API-Token for that HabitRPG user")
+
+		cronCreateTask  = flag.String("cron-create", "0 * * * * *", "Cron entry for creating new tasks")
+		cronSaveToRedis = flag.String("cron-persist", "0 * * * * *", "Cron entry for saving data to Redis")
+		cronUpdateTasks = flag.String("cron-update", "10 */5 * * * *", "Cron entry for fetchin task updates from HabitRPG")
 	)
 
 	flag.Parse()
@@ -32,5 +40,9 @@ func LoadConfig() *Config {
 
 		HabitRPGUserID:   *habitRPGUserID,
 		HabitRPGAPIToken: *habitRPGAPIToken,
+
+		CronCreateTask:  *cronCreateTask,
+		CronSaveToRedis: *cronSaveToRedis,
+		CronUpdateTasks: *cronUpdateTasks,
 	}
 }

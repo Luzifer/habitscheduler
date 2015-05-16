@@ -10,6 +10,9 @@ The habitscheduler is a web application providing an API to schedule tasks with 
 # docker pull luzifer/habitscheduler
 # docker run -ti luzifer/habitscheduler --help
 Usage of /go/bin/habitscheduler:
+  -cron-create="0 * * * * *": Cron entry for creating new tasks
+  -cron-persist="0 * * * * *": Cron entry for saving data to Redis
+  -cron-update="10 */5 * * * *": Cron entry for fetchin task updates from HabitRPG
   -habit-token="": API-Token for that HabitRPG user
   -habit-user="": User-ID from API page in HabitRPG
   -listen=":3000": Address incl. port to have the API listen on

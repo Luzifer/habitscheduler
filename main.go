@@ -39,7 +39,7 @@ func init() {
 
 func main() {
 	c := cron.New()
-	c.AddFunc("0 * * * * *", func() {
+	c.AddFunc(config.CronSaveToRedis, func() {
 		err := habitRPG.Save()
 		if err == nil {
 			log.Println("Save to Redis: Success")
@@ -47,8 +47,8 @@ func main() {
 			log.Printf("Save to Redis: %s\n", err)
 		}
 	})
-	c.AddFunc("0 * * * * *", habitRPG.CreateDueTasks)
-	c.AddFunc("0 */5 * * * *", habitRPG.UpdateStates)
+	c.AddFunc(config.CronCreateTask, habitRPG.CreateDueTasks)
+	c.AddFunc(config.CronUpdateTasks, habitRPG.UpdateStates)
 	c.Start()
 
 	// API interface
