@@ -1,5 +1,7 @@
 # Luzifer / habitscheduler
 
+[![API Documentation](http://badge.luzifer.io/v1/badge?title=API&text=Documentation)](http://ipfs.hub.luzifer.io/ipns/swagger.luzifer.io/?url=Qmeq7Qn7S8Re2rbHeWB37zaeP3oys3paZHEjSH9ctk5P8E)
+
 Currently I'm using [HabitRPG](https://habitrpg.com/) for my task management. They are able to manage daily repeating tasks but not tasks recurring using a cron-like scheme or tasks recurring every 6 weeks after their last completion. To handle those tasks this project has been created.
 
 The habitscheduler is a web application providing an API to schedule tasks with cron-like scheme or recurrance expressed in hours after last completion.
