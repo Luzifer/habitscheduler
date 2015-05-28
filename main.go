@@ -114,9 +114,8 @@ func handleTaskTrigger(res http.ResponseWriter, r *http.Request) {
 	res.Header().Add("Content-Type", "text/plain")
 
 	for i := range habitRPG.Tasks {
-		task := habitRPG.Tasks[i]
-		if task.ID == vars["taskid"] {
-			task.NextEntryDate = time.Now()
+		if habitRPG.Tasks[i].ID == vars["taskid"] {
+			habitRPG.Tasks[i].NextEntryDate = time.Now()
 			http.Error(res, "OK", http.StatusOK)
 			return
 		}
