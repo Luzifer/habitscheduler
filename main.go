@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
@@ -59,6 +60,7 @@ func main() {
 	v1.HandleFunc("/tasks", handleCreateTask).Methods("POST")
 	v1.HandleFunc("/tasks", handleGetTasks).Methods("GET")
 	v1.HandleFunc("/tasks/{taskid}", handleDeleteTask).Methods("DELETE")
+	v1.HandleFunc("/tasks/{taskid}/trigger", handleTaskTrigger).Methods("POST")
 
 	http.Handle("/", &MyServer{r})
 	http.ListenAndServe(config.ListenAddress, nil)
@@ -104,6 +106,24 @@ func handleDeleteTask(res http.ResponseWriter, r *http.Request) {
 
 	res.Header().Add("Content-Type", "text/plain")
 	res.Write([]byte("OK"))
+}
+
+func handleTaskTrigger(res http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	res.Header().Add("Content-Type", "text/plain")
+
+	for i := range habitRPG.Tasks {
+		task := habitRPG.Tasks[i]
+		if task.ID == vars["taskid"] {
+			task.NextEntryDate = time.Now()
+			http.Error(res, "OK", http.StatusOK)
+			return
+		}
+	}
+
+	res.Write([]byte("Not Found"))
+	http.Error(res, "Not found", http.StatusNotFound)
 }
 
 type MyServer struct {

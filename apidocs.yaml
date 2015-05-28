@@ -44,7 +44,7 @@ paths:
           description: Task was successfully created
         500:
           description: You provided wrong data
-          
+
   /tasks/{taskId}:
     delete:
       parameters:
@@ -63,7 +63,28 @@ paths:
           examples:
             text/plain:
               OK
-      
+
+  /tasks/{taskId}/trigger:
+    post:
+      parameters:
+        - name: taskId
+          in: path
+          description: ID of the task to delete
+          required: true
+          type: string
+          pattern: "^[a-z0-9-]+$"
+      produces:
+        - text/plain
+      summary: Schedules the next execution date for the task to now
+      responses:
+        200:
+          description: Task was successfully rescheduled
+          examples:
+            text/plain:
+              OK
+        404:
+          description: Task with {taskId} was not found
+
 definitions:
   Task:
     type: object
@@ -103,5 +124,3 @@ definitions:
       RepeatHours: 0
       RepeatCron: true
       RepeatCronEntry: "0 0 8 1,14 * *"
-
-      
