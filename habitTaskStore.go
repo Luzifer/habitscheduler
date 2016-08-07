@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -76,25 +75,26 @@ func (h *HabitTaskStore) doHTTPRequest(method, contentType, urlStr string, body 
 	if err != nil {
 		return err
 	}
-
 	defer res.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(res.Body)
-	err = json.Unmarshal(responseBody, targetVar)
-	if err != nil {
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("Unexpected status code received: %d", res.StatusCode)
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(targetVar); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *HabitTaskStore) UpdateStates() {
+func (h *HabitTaskStore) UpdateStates() error {
 	res := struct {
 		Data []habitrpg.Task `json:"data"`
 	}{}
-	err := h.doHTTPRequest("GET", "application/json", "/tasks/user", nil, &res)
-	if err != nil {
-		panic(err)
+
+	if err := h.doHTTPRequest("GET", "application/json", "/tasks/user", nil, &res); err != nil {
+		return fmt.Errorf("Unable to fetch current tasks: %s", err)
 	}
 
 	for i, _ := range h.Tasks {
@@ -123,9 +123,10 @@ func (h *HabitTaskStore) UpdateStates() {
 			task.LastTaskID = ""
 		}
 	}
+	return nil
 }
 
-func (h *HabitTaskStore) CreateDueTasks() {
+func (h *HabitTaskStore) CreateDueTasks() error {
 	log.Println("Creating tasks...")
 	for i, _ := range h.Tasks {
 		task := &h.Tasks[i]
@@ -136,22 +137,21 @@ func (h *HabitTaskStore) CreateDueTasks() {
 				DateCreated: time.Now(),
 			}
 
-			data, err := json.Marshal(newTask)
-			if err != nil {
-				panic(err)
+			buf := bytes.NewBuffer([]byte{})
+			if err := json.NewEncoder(buf).Encode(newTask); err != nil {
+				return fmt.Errorf("Unable to encode new task: %s", err)
 			}
 
-			reader := bytes.NewReader(data)
 			res := habitrpg.Task{}
-			err = h.doHTTPRequest("POST", "application/json", "/tasks/user", reader, &res)
-			if err != nil {
-				panic(err)
+			if err := h.doHTTPRequest("POST", "application/json", "/tasks/user", buf, &res); err != nil {
+				return fmt.Errorf("Unable to create new task with API: %s", err)
 			}
 
 			task.LastTaskID = res.ID
 			task.IsCompleted = false
 		}
 	}
+	return nil
 }
 
 type HabitTask struct {

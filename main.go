@@ -61,8 +61,16 @@ func main() {
 			os.Exit(1)
 		}
 	})
-	c.AddFunc(config.CronCreateTask, habitRPG.CreateDueTasks)
-	c.AddFunc(config.CronUpdateTasks, habitRPG.UpdateStates)
+	c.AddFunc(config.CronCreateTask, func() {
+		if err := habitRPG.CreateDueTasks(); err != nil {
+			log.Printf("An error ocurred while creating tasks: %s", err)
+		}
+	})
+	c.AddFunc(config.CronUpdateTasks, func() {
+		if err := habitRPG.UpdateStates(); err != nil {
+			log.Printf("An error ocurred while fetching tasks: %s", err)
+		}
+	})
 	c.Start()
 
 	// API interface
