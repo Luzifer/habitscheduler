@@ -54,16 +54,16 @@ type TaskChecklistEntry struct {
 
 type Task struct {
 	// General
-	ID          string          `json:"id,omitempty"`
-	Type        string          `json:"type,omitempty"`
-	DateCreated time.Time       `json:"dateCreated,omitempty"`
-	Text        string          `json:"text,omitempty"`
-	Notes       string          `json:"notes,omitempty"`
-	Tags        map[string]bool `json:"tags,omitempty"`
-	Value       float64         `json:"value,omitempty"`
-	Priority    int             `json:"priority,omitempty"`
-	Attribute   string          `json:"attribute,omitempty"`
-	Challenge   TaskChallenge   `json:"challenge,omitempty"`
+	ID          string        `json:"id,omitempty"`
+	Type        string        `json:"type,omitempty"`
+	DateCreated time.Time     `json:"dateCreated,omitempty"`
+	Text        string        `json:"text,omitempty"`
+	Notes       string        `json:"notes,omitempty"`
+	Tags        []string      `json:"tags,omitempty"`
+	Value       float64       `json:"value,omitempty"`
+	Priority    int           `json:"priority,omitempty"`
+	Attribute   string        `json:"attribute,omitempty"`
+	Challenge   TaskChallenge `json:"challenge,omitempty"`
 
 	// Multiple types
 	History           []TaskHistory        `json:"history,omitempty"`

@@ -66,7 +66,7 @@ func (h *HabitTaskStore) Load() error {
 }
 
 func (h *HabitTaskStore) doHTTPRequest(method, contentType, urlStr string, body io.Reader, targetVar interface{}) error {
-	req, err := http.NewRequest(method, fmt.Sprintf("https://habitrpg.com:443/api/v2%s", urlStr), body)
+	req, err := http.NewRequest(method, fmt.Sprintf("https://habitrpg.com:443/api/v3%s", urlStr), body)
 	if err != nil {
 		return err
 	}
@@ -91,20 +91,25 @@ func (h *HabitTaskStore) doHTTPRequest(method, contentType, urlStr string, body 
 }
 
 func (h *HabitTaskStore) UpdateStates() {
-	res := []habitrpg.Task{}
-	err := h.doHTTPRequest("GET", "application/json", "/user/tasks", nil, &res)
+	res := struct {
+		Data []habitrpg.Task `json:"data"`
+	}{}
+	err := h.doHTTPRequest("GET", "application/json", "/tasks/user", nil, &res)
 	if err != nil {
 		panic(err)
 	}
 
 	for i, _ := range h.Tasks {
 		task := &h.Tasks[i]
-		if len(task.LastTaskID) < 1 {
+		if task.LastTaskID == "" {
+			if !task.IsCompleted {
+				task.IsCompleted = true
+			}
 			continue
 		}
 
 		taskFound := false
-		for _, htask := range res {
+		for _, htask := range res.Data {
 			if htask.ID == task.LastTaskID {
 				task.IsCompleted = htask.Completed
 				task.updateNextEntryTime(htask.DateCompleted, false)
@@ -140,7 +145,7 @@ func (h *HabitTaskStore) CreateDueTasks() {
 
 			reader := bytes.NewReader(data)
 			res := habitrpg.Task{}
-			err = h.doHTTPRequest("POST", "application/json", "/user/tasks", reader, &res)
+			err = h.doHTTPRequest("POST", "application/json", "/tasks/user", reader, &res)
 			if err != nil {
 				panic(err)
 			}
