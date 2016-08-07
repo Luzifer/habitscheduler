@@ -1,3 +1,7 @@
+# 0.3.1 / 2016-08-07
+
+  * Fix response parsing
+
 # 0.3.0 / 2016-08-07
 
   * replace own config parsing with rconfig
