@@ -21,13 +21,11 @@ import (
 type HabitTaskStore struct {
 	Tasks []HabitTask `json:",omitempty"`
 
-	config          *Config        `json:"-"`
 	redisConnection *goredis.Redis `json:"-"`
 }
 
-func NewHabitTaskStore(config *Config, redisConnection *goredis.Redis) *HabitTaskStore {
+func NewHabitTaskStore(redisConnection *goredis.Redis) *HabitTaskStore {
 	return &HabitTaskStore{
-		config:          config,
 		redisConnection: redisConnection,
 		Tasks:           []HabitTask{},
 	}
@@ -39,7 +37,7 @@ func (h *HabitTaskStore) Save() error {
 		return err
 	}
 
-	err = h.redisConnection.Set(h.config.RedisStoreKey, string(data), 0, 0, false, false)
+	err = h.redisConnection.Set(config.RedisStoreKey, string(data), 0, 0, false, false)
 	if err != nil {
 		return err
 	}
@@ -48,7 +46,7 @@ func (h *HabitTaskStore) Save() error {
 }
 
 func (h *HabitTaskStore) Load() error {
-	data, err := h.redisConnection.Get(h.config.RedisStoreKey)
+	data, err := h.redisConnection.Get(config.RedisStoreKey)
 	if err != nil {
 		return err
 	}
@@ -70,8 +68,8 @@ func (h *HabitTaskStore) doHTTPRequest(method, contentType, urlStr string, body 
 	if err != nil {
 		return err
 	}
-	req.Header.Add("x-api-key", h.config.HabitRPGAPIToken)
-	req.Header.Add("x-api-user", h.config.HabitRPGUserID)
+	req.Header.Add("x-api-key", config.HabitRPGAPIToken)
+	req.Header.Add("x-api-user", config.HabitRPGUserID)
 	req.Header.Add("Content-Type", contentType)
 
 	res, err := http.DefaultClient.Do(req)

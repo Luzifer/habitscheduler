@@ -8,21 +8,33 @@ import (
 	"os"
 	"time"
 
+	"github.com/Luzifer/rconfig"
 	"github.com/gorilla/mux"
 	"github.com/robfig/cron"
 	"github.com/xuyu/goredis"
 )
 
 var (
-	config          *Config
+	config struct {
+		RedisAddress  string `flag:"redis-url" default:"" description:"Connectionstring to redis server"`
+		RedisStoreKey string `flag:"redis-key" default:"habitrpg-tasks" description:"Key to store the data in"`
+
+		ListenAddress string `flag:"listen" default:":3000" description:"Address incl. port to have the API listen on"`
+
+		HabitRPGUserID   string `flag:"habit-user" default:"" description:"User-ID from API page in HabitRPG"`
+		HabitRPGAPIToken string `flag:"habit-token" default:"" description:"API-Token for that HabitRPG user"`
+
+		CronCreateTask  string `flag:"cron-create" default:"0 * * * * *" description:"Cron entry for creating new tasks"`
+		CronSaveToRedis string `flag:"cron-persist" default:"0 * * * * *" description:"Cron entry for saving data to Redis"`
+		CronUpdateTasks string `flag:"cron-update" default:"10 */5 * * * *" description:"Cron entry for fetchin task updates from HabitRPG"`
+	}
 	redisConnection *goredis.Redis
 	habitRPG        *HabitTaskStore
 )
 
 func init() {
 	var err error
-
-	config = LoadConfig()
+	rconfig.Parse(&config)
 
 	redisConnection, err = goredis.DialURL(config.RedisAddress)
 	if err != nil {
@@ -30,7 +42,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	habitRPG = NewHabitTaskStore(config, redisConnection)
+	habitRPG = NewHabitTaskStore(redisConnection)
 	err = habitRPG.Load()
 	if err != nil {
 		log.Printf("Error while loading HabitRPG store: %s", err)
