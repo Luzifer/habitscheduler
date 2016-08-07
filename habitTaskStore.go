@@ -142,12 +142,14 @@ func (h *HabitTaskStore) CreateDueTasks() error {
 				return fmt.Errorf("Unable to encode new task: %s", err)
 			}
 
-			res := habitrpg.Task{}
+			res := struct {
+				Data habitrpg.Task `json:"data"`
+			}{}
 			if err := h.doHTTPRequest("POST", "application/json", "/tasks/user", buf, &res); err != nil {
 				return fmt.Errorf("Unable to create new task with API: %s", err)
 			}
 
-			task.LastTaskID = res.ID
+			task.LastTaskID = res.Data.ID
 			task.IsCompleted = false
 		}
 	}
